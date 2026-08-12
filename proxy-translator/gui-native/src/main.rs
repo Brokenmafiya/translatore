@@ -7,14 +7,14 @@ use std::time::Duration;
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("Translatore v3.0 — Desktop Control Center")
+            .with_title("Translatore Enterprise Network Gateway")
             .with_inner_size([1040.0, 720.0])
             .with_min_inner_size([850.0, 580.0]),
         ..Default::default()
     };
 
     eframe::run_native(
-        "Translatore v3.0",
+        "Translatore Enterprise",
         options,
         Box::new(|_cc| Box::new(TranslatoreApp::new())),
     )
@@ -22,11 +22,11 @@ fn main() -> eframe::Result<()> {
 
 #[derive(PartialEq)]
 enum Tab {
-    Dashboard,
+    Overview,
     Rules,
     Nodes,
     Logs,
-    Settings,
+    Preferences,
 }
 
 #[derive(Clone)]
@@ -45,8 +45,6 @@ struct TranslatoreApp {
     http_port: String,
     socks_port: String,
     auth_token: String,
-    http_count: usize,
-    socks_count: usize,
     rules: Vec<Rule>,
     new_rule_pattern: String,
     new_rule_type: String,
@@ -60,8 +58,8 @@ impl TranslatoreApp {
             dirs::home_dir().map(|h| h.join(".translatore/auth_token")).unwrap_or_default()
         ).unwrap_or_else(|_| "y9HUkC7Eppc4f2NBVvhLCFb35mYz2WkIdYJ9NxP2".to_string()).trim().to_string();
 
-        let app = Self {
-            current_tab: Tab::Dashboard,
+        Self {
+            current_tab: Tab::Overview,
             is_connected: false,
             agent_process: None,
             worker_url: "https://proxy-translator-worker.sngrcreative.workers.dev".to_string(),
@@ -70,8 +68,6 @@ impl TranslatoreApp {
             http_port: "8888".to_string(),
             socks_port: "1080".to_string(),
             auth_token,
-            http_count: 0,
-            socks_count: 0,
             rules: vec![
                 Rule { pattern: "*.target.com".to_string(), rule_type: "HTTP".to_string() },
                 Rule { pattern: "api.github.com".to_string(), rule_type: "HTTP".to_string() },
@@ -80,13 +76,11 @@ impl TranslatoreApp {
             new_rule_pattern: String::new(),
             new_rule_type: "HTTP".to_string(),
             logs: Arc::new(Mutex::new(vec![
-                "🚀 Translatore Control Center v3.0 Started".to_string(),
-                "Ready to manage Cloudflare edge proxy agent".to_string(),
+                "Translatore Enterprise Gateway Service initialized".to_string(),
+                "Ready to route encrypted network traffic via Cloudflare Edge".to_string(),
             ])),
             status_notification: None,
-        };
-
-        app
+        }
     }
 
     fn start_agent(&mut self) {
@@ -108,11 +102,11 @@ impl TranslatoreApp {
                 Ok(child) => {
                     self.agent_process = Some(child);
                     self.is_connected = true;
-                    self.add_log("✅ Local pt-agent daemon spawned successfully", "ok");
+                    self.add_log("Gateway daemon initialized successfully");
                     self.fetch_live_exit_ip();
                 }
                 Err(e) => {
-                    self.add_log(&format!("❌ Failed to start pt-agent: {e}"), "err");
+                    self.add_log(&format!("Failed to launch gateway service: {e}"));
                     self.is_connected = false;
                 }
             }
@@ -123,7 +117,7 @@ impl TranslatoreApp {
         if let Some(mut child) = self.agent_process.take() {
             let _ = child.kill();
             self.is_connected = false;
-            self.add_log("⏸ Local pt-agent daemon terminated", "info");
+            self.add_log("Gateway daemon stopped");
             if let Ok(mut ip) = self.exit_ip.lock() {
                 *ip = "Disconnected".to_string();
             }
@@ -154,16 +148,16 @@ impl TranslatoreApp {
                         if let Ok(ip_text) = resp.text() {
                             let clean_ip = ip_text.trim().to_string();
                             if let Ok(mut store) = exit_ip_store.lock() {
-                                *store = format!("{clean_ip} (Cloudflare Edge)");
+                                *store = format!("{clean_ip} (Cloudflare Edge Node)");
                             }
                             if let Ok(mut l) = logs_store.lock() {
-                                l.push(format!("[LIVE CHECK] Exit IP verified: {clean_ip}"));
+                                l.push(format!("Egress exit IP verified: {clean_ip}"));
                             }
                         }
                     }
                     _ => {
                         if let Ok(mut store) = exit_ip_store.lock() {
-                            *store = "104.28.163.123 (Cloudflare Edge)".to_string();
+                            *store = "104.28.163.123 (Cloudflare Edge Node)".to_string();
                         }
                     }
                 }
@@ -174,7 +168,7 @@ impl TranslatoreApp {
         });
     }
 
-    fn add_log(&self, msg: &str, _level: &str) {
+    fn add_log(&self, msg: &str) {
         if let Ok(mut l) = self.logs.lock() {
             let timestamp = chrono_lite_timestamp();
             l.push(format!("[{timestamp}] {msg}"));
@@ -204,10 +198,11 @@ impl Drop for TranslatoreApp {
 
 impl eframe::App for TranslatoreApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Corporate Enterprise Theme (Dark Slate & Indigo)
         let mut style = (*ctx.style()).clone();
         style.visuals.dark_mode = true;
-        style.visuals.window_fill = egui::Color32::from_rgb(11, 15, 25);
-        style.visuals.panel_fill = egui::Color32::from_rgb(7, 10, 17);
+        style.visuals.window_fill = egui::Color32::from_rgb(15, 23, 42); // Slate 900
+        style.visuals.panel_fill = egui::Color32::from_rgb(30, 41, 59);  // Slate 800
         ctx.set_style(style);
 
         // Sidebar Panel
@@ -215,98 +210,101 @@ impl eframe::App for TranslatoreApp {
             .resizable(false)
             .default_width(230.0)
             .show(ctx, |ui| {
-                ui.add_space(16.0);
+                ui.add_space(18.0);
                 
                 // Brand Header
                 ui.horizontal(|ui| {
-                    ui.add_space(8.0);
-                    ui.heading(egui::RichText::new("⚡ Translatore").strong().color(egui::Color32::from_rgb(139, 92, 246)));
-                    ui.label(egui::RichText::new("v3.0").small().color(egui::Color32::from_rgb(156, 163, 175)));
+                    ui.add_space(10.0);
+                    ui.heading(egui::RichText::new("Translatore").strong().color(egui::Color32::from_rgb(248, 250, 252)));
+                });
+                ui.horizontal(|ui| {
+                    ui.add_space(10.0);
+                    ui.label(egui::RichText::new("Enterprise Network Gateway").small().color(egui::Color32::from_rgb(148, 163, 184)));
                 });
                 
                 ui.add_space(20.0);
                 ui.separator();
                 ui.add_space(12.0);
 
-                // Nav items
-                if ui.selectable_label(self.current_tab == Tab::Dashboard, "📊  Dashboard").clicked() {
-                    self.current_tab = Tab::Dashboard;
+                // Enterprise Nav items
+                if ui.selectable_label(self.current_tab == Tab::Overview, "  Overview").clicked() {
+                    self.current_tab = Tab::Overview;
                 }
                 ui.add_space(4.0);
-                if ui.selectable_label(self.current_tab == Tab::Rules, "🎯  Routing Rules").clicked() {
+                if ui.selectable_label(self.current_tab == Tab::Rules, "  Routing Rules").clicked() {
                     self.current_tab = Tab::Rules;
                 }
                 ui.add_space(4.0);
-                if ui.selectable_label(self.current_tab == Tab::Nodes, "🌐  Worker Nodes").clicked() {
+                if ui.selectable_label(self.current_tab == Tab::Nodes, "  Edge Nodes").clicked() {
                     self.current_tab = Tab::Nodes;
                 }
                 ui.add_space(4.0);
-                if ui.selectable_label(self.current_tab == Tab::Logs, "💻  Live Logs").clicked() {
+                if ui.selectable_label(self.current_tab == Tab::Logs, "  Activity Logs").clicked() {
                     self.current_tab = Tab::Logs;
                 }
                 ui.add_space(4.0);
-                if ui.selectable_label(self.current_tab == Tab::Settings, "⚙  Settings").clicked() {
-                    self.current_tab = Tab::Settings;
+                if ui.selectable_label(self.current_tab == Tab::Preferences, "  Preferences").clicked() {
+                    self.current_tab = Tab::Preferences;
                 }
 
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                    ui.add_space(12.0);
+                    ui.add_space(14.0);
                     ui.horizontal(|ui| {
-                        let dot_color = if self.is_connected { egui::Color32::from_rgb(16, 185, 129) } else { egui::Color32::from_rgb(239, 68, 68) };
+                        let dot_color = if self.is_connected { egui::Color32::from_rgb(5, 150, 105) } else { egui::Color32::from_rgb(225, 29, 72) };
                         ui.label(egui::RichText::new("●").color(dot_color));
-                        let status_lbl = if self.is_connected { "Agent Active" } else { "Agent Stopped" };
-                        ui.label(egui::RichText::new(status_lbl).small().color(egui::Color32::from_rgb(156, 163, 175)));
+                        let status_lbl = if self.is_connected { "Gateway Connected" } else { "Gateway Stopped" };
+                        ui.label(egui::RichText::new(status_lbl).small().color(egui::Color32::from_rgb(148, 163, 184)));
                     });
                 });
             });
 
         // Central Content Area
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.add_space(10.0);
+            ui.add_space(12.0);
 
             // Notification Banner
             if let Some((msg, time)) = &self.status_notification {
                 if time.elapsed().as_secs() < 3 {
                     ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new(format!("📋 {msg}")).color(egui::Color32::from_rgb(16, 185, 129)));
+                        ui.label(egui::RichText::new(format!("{msg}")).color(egui::Color32::from_rgb(5, 150, 105)));
                     });
                     ui.add_space(8.0);
                 }
             }
 
             match self.current_tab {
-                Tab::Dashboard => self.show_dashboard(ui),
+                Tab::Overview => self.show_overview(ui),
                 Tab::Rules => self.show_rules(ui),
                 Tab::Nodes => self.show_nodes(ui),
                 Tab::Logs => self.show_logs(ui),
-                Tab::Settings => self.show_settings(ui),
+                Tab::Preferences => self.show_preferences(ui),
             }
         });
     }
 }
 
 impl TranslatoreApp {
-    fn show_dashboard(&mut self, ui: &mut egui::Ui) {
-        ui.heading("System Dashboard");
+    fn show_overview(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Network Overview");
         ui.add_space(12.0);
 
-        // Status Panel Card
+        // Status Card
         egui::Frame::none()
-            .fill(egui::Color32::from_rgb(18, 24, 38))
-            .rounding(10.0)
+            .fill(egui::Color32::from_rgb(30, 41, 59))
+            .rounding(8.0)
             .inner_margin(16.0)
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
                     let (status_str, status_clr) = if self.is_connected {
-                        ("CONNECTED", egui::Color32::from_rgb(16, 185, 129))
+                        ("PROTECTED & CONNECTED", egui::Color32::from_rgb(5, 150, 105))
                     } else {
-                        ("DISCONNECTED", egui::Color32::from_rgb(239, 68, 68))
+                        ("DISCONNECTED", egui::Color32::from_rgb(225, 29, 72))
                     };
                     ui.heading(egui::RichText::new(status_str).strong().color(status_clr));
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         let mut state = self.is_connected;
-                        if ui.checkbox(&mut state, "Enable Agent").changed() {
+                        if ui.checkbox(&mut state, "Enable Service").changed() {
                             if state {
                                 self.start_agent();
                             } else {
@@ -318,74 +316,74 @@ impl TranslatoreApp {
 
                 ui.add_space(10.0);
                 ui.horizontal(|ui| {
-                    ui.label("Worker Node:");
-                    ui.monospace(egui::RichText::new(&self.worker_url).color(egui::Color32::from_rgb(6, 182, 212)));
+                    ui.label("Cloudflare Edge Node:");
+                    ui.monospace(egui::RichText::new(&self.worker_url).color(egui::Color32::from_rgb(79, 70, 229)));
                 });
 
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
-                    ui.label("Detected Exit IP:");
+                    ui.label("Egress Exit IP:");
                     let current_ip = self.exit_ip.lock().unwrap().clone();
-                    ui.monospace(egui::RichText::new(&current_ip).color(egui::Color32::from_rgb(243, 244, 246)));
-                    if ui.button("↻ Refresh").clicked() {
+                    ui.monospace(egui::RichText::new(&current_ip).color(egui::Color32::from_rgb(248, 250, 252)));
+                    if ui.button("Refresh IP").clicked() {
                         self.fetch_live_exit_ip();
                     }
                 });
             });
 
-        ui.add_space(18.0);
+        ui.add_space(20.0);
 
-        // Proxy Cards Column
+        // Proxy Gateways Column
         ui.columns(2, |cols| {
-            // HTTP Card
+            // HTTP/S Proxy Gateway
             egui::Frame::none()
-                .fill(egui::Color32::from_rgb(18, 24, 38))
-                .rounding(10.0)
+                .fill(egui::Color32::from_rgb(30, 41, 59))
+                .rounding(8.0)
                 .inner_margin(16.0)
                 .show(&mut cols[0], |ui| {
                     ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("HTTP PROXY").strong().color(egui::Color32::from_rgb(59, 130, 246)));
+                        ui.label(egui::RichText::new("HTTP/S PROXY GATEWAY").strong().color(egui::Color32::from_rgb(79, 70, 229)));
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            let (st, clr) = if self.is_connected { ("Active", egui::Color32::from_rgb(16, 185, 129)) } else { ("Inactive", egui::Color32::from_rgb(156, 163, 175)) };
+                            let (st, clr) = if self.is_connected { ("Active", egui::Color32::from_rgb(5, 150, 105)) } else { ("Inactive", egui::Color32::from_rgb(148, 163, 184)) };
                             ui.label(egui::RichText::new(st).small().color(clr));
                         });
                     });
                     ui.add_space(8.0);
                     ui.heading(egui::RichText::new(format!("127.0.0.1:{}", self.http_port)).monospace());
-                    ui.label("Format: HTTP/HTTPS proxy gateway");
+                    ui.label("Encrypted HTTP/S Tunneling Endpoint");
                     ui.add_space(10.0);
                     ui.horizontal(|ui| {
-                        if ui.button("📋 Copy URL").clicked() {
+                        if ui.button("Copy Address").clicked() {
                             ui.output_mut(|o| o.copied_text = format!("http://127.0.0.1:{}", self.http_port));
                         }
-                        if ui.button("💻 Export Env").clicked() {
+                        if ui.button("Export Environment").clicked() {
                             ui.output_mut(|o| o.copied_text = format!("export http_proxy=http://127.0.0.1:{} https_proxy=http://127.0.0.1:{}", self.http_port, self.http_port));
                         }
                     });
                 });
 
-            // SOCKS5 Card
+            // SOCKS5 Tunnel
             egui::Frame::none()
-                .fill(egui::Color32::from_rgb(18, 24, 38))
-                .rounding(10.0)
+                .fill(egui::Color32::from_rgb(30, 41, 59))
+                .rounding(8.0)
                 .inner_margin(16.0)
                 .show(&mut cols[1], |ui| {
                     ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("SOCKS5 PROXY").strong().color(egui::Color32::from_rgb(139, 92, 246)));
+                        ui.label(egui::RichText::new("SOCKS5 SECURE TUNNEL").strong().color(egui::Color32::from_rgb(79, 70, 229)));
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            let (st, clr) = if self.is_connected { ("Remote DNS", egui::Color32::from_rgb(16, 185, 129)) } else { ("Inactive", egui::Color32::from_rgb(156, 163, 175)) };
+                            let (st, clr) = if self.is_connected { ("DNS Encrypted", egui::Color32::from_rgb(5, 150, 105)) } else { ("Inactive", egui::Color32::from_rgb(148, 163, 184)) };
                             ui.label(egui::RichText::new(st).small().color(clr));
                         });
                     });
                     ui.add_space(8.0);
                     ui.heading(egui::RichText::new(format!("127.0.0.1:{}", self.socks_port)).monospace());
-                    ui.label("Format: SOCKS5 with remote DNS");
+                    ui.label("Remote DNS Resolution Tunnel");
                     ui.add_space(10.0);
                     ui.horizontal(|ui| {
-                        if ui.button("📋 Copy URL").clicked() {
+                        if ui.button("Copy Address").clicked() {
                             ui.output_mut(|o| o.copied_text = format!("socks5://127.0.0.1:{}", self.socks_port));
                         }
-                        if ui.button("⚡ Proxychains").clicked() {
+                        if ui.button("Copy Config").clicked() {
                             ui.output_mut(|o| o.copied_text = format!("socks5 127.0.0.1 {}", self.socks_port));
                         }
                     });
@@ -394,80 +392,76 @@ impl TranslatoreApp {
 
         ui.add_space(20.0);
 
-        // Quick Snippets Bar for Security Tools
-        ui.heading("Quick Tool Integrations");
+        // Integration Helpers
+        ui.heading("Quick Integration Exporters");
         ui.add_space(8.0);
         egui::Frame::none()
-            .fill(egui::Color32::from_rgb(18, 24, 38))
+            .fill(egui::Color32::from_rgb(30, 41, 59))
             .rounding(8.0)
             .inner_margin(12.0)
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
-                    if ui.button("curl SOCKS5").clicked() {
+                    if ui.button("cURL Command").clicked() {
                         ui.output_mut(|o| o.copied_text = format!("curl --socks5-hostname 127.0.0.1:{} https://ifconfig.me", self.socks_port));
-                        self.set_notification("Copied cURL SOCKS5 snippet!");
+                        self.set_notification("Copied cURL snippet to clipboard");
                     }
-                    if ui.button("Burp Suite Upstream").clicked() {
+                    if ui.button("Security Audit Proxy").clicked() {
                         ui.output_mut(|o| o.copied_text = format!("127.0.0.1:{}", self.http_port));
-                        self.set_notification("Copied Burp proxy string!");
+                        self.set_notification("Copied proxy address to clipboard");
                     }
-                    if ui.button("ffuf HTTP Proxy").clicked() {
+                    if ui.button("Fuzzing Tool Proxy").clicked() {
                         ui.output_mut(|o| o.copied_text = format!("-x http://127.0.0.1:{}", self.http_port));
-                        self.set_notification("Copied ffuf proxy flag!");
-                    }
-                    if ui.button("sqlmap Proxy").clicked() {
-                        ui.output_mut(|o| o.copied_text = format!("--proxy=http://127.0.0.1:{}", self.http_port));
-                        self.set_notification("Copied sqlmap proxy flag!");
+                        self.set_notification("Copied proxy argument to clipboard");
                     }
                 });
             });
 
         ui.add_space(16.0);
-        ui.heading("Live Event Stream");
+        ui.heading("Activity Log Stream");
         ui.add_space(8.0);
 
         egui::Frame::none()
-            .fill(egui::Color32::from_rgb(5, 7, 12))
+            .fill(egui::Color32::from_rgb(15, 23, 42))
             .rounding(8.0)
             .inner_margin(12.0)
             .show(ui, |ui| {
                 let logs = self.logs.lock().unwrap().clone();
                 egui::ScrollArea::vertical().max_height(140.0).show(ui, |ui| {
                     for line in &logs {
-                        ui.monospace(egui::RichText::new(line).color(egui::Color32::from_rgb(156, 163, 175)));
+                        ui.monospace(egui::RichText::new(line).color(egui::Color32::from_rgb(148, 163, 184)));
                     }
                 });
             });
     }
 
     fn show_rules(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Allow-list Routing Rules");
-        ui.label("Pattern matching rules enforced on Cloudflare Worker KV");
+        ui.heading("Routing & Compliance Rules");
+        ui.label("Pattern allow-list policies enforced at Cloudflare Edge");
         ui.add_space(16.0);
 
         // Presets
         ui.horizontal(|ui| {
-            ui.label("Quick Presets:");
-            if ui.button("🎯 Bug Bounty Preset").clicked() {
+            ui.label("Policy Presets:");
+            if ui.button("Security Audit Policy").clicked() {
                 self.rules = vec![
                     Rule { pattern: "*.target.com".to_string(), rule_type: "HTTP".to_string() },
                     Rule { pattern: "api.github.com".to_string(), rule_type: "HTTP".to_string() },
                     Rule { pattern: "192.168.1.*:22".to_string(), rule_type: "TCP".to_string() },
                 ];
-                self.add_log("Applied Bug Bounty Rule Preset", "info");
+                self.add_log("Applied Security Audit Policy");
             }
-            if ui.button("🔒 Strict Security").clicked() {
+            if ui.button("Strict Compliance Policy").clicked() {
                 self.rules = vec![
                     Rule { pattern: "ifconfig.me".to_string(), rule_type: "HTTP".to_string() },
                     Rule { pattern: "httpbin.org".to_string(), rule_type: "HTTP".to_string() },
                 ];
-                self.add_log("Applied Strict Security Preset", "info");
+                self.add_log("Applied Strict Compliance Policy");
             }
-            if ui.button("⚡ Allow All (*)").clicked() {
+            if ui.button("Development Mode (*)").clicked() {
                 self.rules = vec![
                     Rule { pattern: "*".to_string(), rule_type: "ALL".to_string() },
                 ];
-                self.add_log("Applied Unrestricted (*) Preset", "info");
+                self.add_log("Applied Unrestricted Policy");
             }
         });
 
@@ -477,12 +471,12 @@ impl TranslatoreApp {
         ui.horizontal(|ui| {
             ui.label("New Pattern:");
             ui.text_edit_singleline(&mut self.new_rule_pattern);
-            if ui.button("+ Add Rule").clicked() && !self.new_rule_pattern.is_empty() {
+            if ui.button("Add Policy").clicked() && !self.new_rule_pattern.is_empty() {
                 self.rules.push(Rule {
                     pattern: self.new_rule_pattern.clone(),
                     rule_type: self.new_rule_type.clone(),
                 });
-                self.add_log(&format!("Added rule: {}", self.new_rule_pattern), "info");
+                self.add_log(&format!("Added routing policy: {}", self.new_rule_pattern));
                 self.new_rule_pattern.clear();
             }
         });
@@ -491,12 +485,12 @@ impl TranslatoreApp {
 
         // Rules List
         egui::Frame::none()
-            .fill(egui::Color32::from_rgb(18, 24, 38))
+            .fill(egui::Color32::from_rgb(30, 41, 59))
             .rounding(8.0)
             .inner_margin(12.0)
             .show(ui, |ui| {
                 ui.columns(4, |cols| {
-                    cols[0].strong("Pattern");
+                    cols[0].strong("Domain / Pattern");
                     cols[1].strong("Protocol");
                     cols[2].strong("Status");
                     cols[3].strong("Action");
@@ -508,7 +502,7 @@ impl TranslatoreApp {
                     ui.columns(4, |cols| {
                         cols[0].monospace(&rule.pattern);
                         cols[1].label(&rule.rule_type);
-                        cols[2].label(egui::RichText::new("Active").color(egui::Color32::from_rgb(16, 185, 129)));
+                        cols[2].label(egui::RichText::new("Active").color(egui::Color32::from_rgb(5, 150, 105)));
                         if cols[3].button("Delete").clicked() {
                             to_remove = Some(idx);
                         }
@@ -522,31 +516,31 @@ impl TranslatoreApp {
     }
 
     fn show_nodes(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Cloudflare Worker Nodes");
-        ui.label("Deployed worker deployments");
+        ui.heading("Cloudflare Edge Nodes");
+        ui.label("Active enterprise worker deployments");
         ui.add_space(16.0);
 
         egui::Frame::none()
-            .fill(egui::Color32::from_rgb(18, 24, 38))
-            .rounding(10.0)
+            .fill(egui::Color32::from_rgb(30, 41, 59))
+            .rounding(8.0)
             .inner_margin(16.0)
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
-                    ui.heading("US-East Node (Production)");
+                    ui.heading("Primary Gateway Node");
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.label(egui::RichText::new("ACTIVE").strong().color(egui::Color32::from_rgb(16, 185, 129)));
+                        ui.label(egui::RichText::new("ACTIVE").strong().color(egui::Color32::from_rgb(5, 150, 105)));
                     });
                 });
                 ui.monospace(&self.worker_url);
-                ui.label("Ping Latency: 12ms");
+                ui.label("Latency: 12ms | Health: Healthy");
             });
     }
 
     fn show_logs(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
-            ui.heading("Live Output Logs");
+            ui.heading("Activity Logs");
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui.button("Clear Logs").clicked() {
+                if ui.button("Clear History").clicked() {
                     if let Ok(mut l) = self.logs.lock() {
                         l.clear();
                     }
@@ -556,28 +550,28 @@ impl TranslatoreApp {
         ui.add_space(12.0);
 
         egui::Frame::none()
-            .fill(egui::Color32::from_rgb(5, 7, 12))
+            .fill(egui::Color32::from_rgb(15, 23, 42))
             .rounding(8.0)
             .inner_margin(12.0)
             .show(ui, |ui| {
                 let logs = self.logs.lock().unwrap().clone();
                 egui::ScrollArea::vertical().max_height(450.0).show(ui, |ui| {
                     for line in &logs {
-                        ui.monospace(egui::RichText::new(line).color(egui::Color32::from_rgb(156, 163, 175)));
+                        ui.monospace(egui::RichText::new(line).color(egui::Color32::from_rgb(148, 163, 184)));
                     }
                 });
             });
     }
 
-    fn show_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Settings & Environment");
+    fn show_preferences(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Preferences & Environment");
         ui.add_space(16.0);
 
-        ui.label("HTTP Listener Port:");
+        ui.label("HTTP Gateway Port:");
         ui.text_edit_singleline(&mut self.http_port);
         ui.add_space(8.0);
 
-        ui.label("SOCKS5 Listener Port:");
+        ui.label("SOCKS5 Tunnel Port:");
         ui.text_edit_singleline(&mut self.socks_port);
         ui.add_space(8.0);
 
@@ -585,8 +579,8 @@ impl TranslatoreApp {
         ui.text_edit_singleline(&mut self.auth_token);
         ui.add_space(16.0);
 
-        if ui.button("Save & Apply Configuration").clicked() {
-            self.set_notification("Configuration saved!");
+        if ui.button("Save & Apply Preferences").clicked() {
+            self.set_notification("Preferences updated");
             if self.is_connected {
                 self.stop_agent();
                 self.start_agent();
