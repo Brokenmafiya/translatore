@@ -17,11 +17,10 @@ A Rust-based traffic proxy that routes HTTP, TCP, and DNS through Cloudflare's e
 
 **Components:**
 
-| Component | What it does | Runs on |
-|-----------|-------------|---------|
 | **Worker** | Cloudflare Worker (Rust/WASM) — proxies traffic at the edge | Cloudflare |
 | **Agent** | Local proxy listener (HTTP :8888, SOCKS5 :1080) | Your machine |
 | **Control** | Rule management API + deploy to KV | Your machine |
+| **GUI App** | Native Desktop Application (Tauri v2 + Rust) | Your machine |
 
 ---
 
@@ -42,6 +41,11 @@ cargo build --release
 cd ../control
 cargo build --release
 # Binary: target/release/pt-control
+
+# Build Native Desktop GUI Application
+cd ../gui-native
+cargo build --release
+# Binary: target/release/translatore-gui
 ```
 
 ### 2. Deploy Worker

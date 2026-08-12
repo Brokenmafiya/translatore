@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Translatore v3.0</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Translatore</span>
+          <span class="brand-badge">v3.0</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          Dashboard
+        </button>
+
+        <button class="nav-item" data-tab="rules">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+          </svg>
+          Routing Rules
+        </button>
+
+        <button class="nav-item" data-tab="nodes">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          Worker Nodes
+        </button>
+
+        <button class="nav-item" data-tab="logs">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 17 10 11 4 5"/>
+            <line x1="12" y1="19" x2="20" y2="19"/>
+          </svg>
+          Live Logs
+        </button>
+
+        <button class="nav-item" data-tab="settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Settings
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <span class="dot active"></span>
+          <span class="status-label">Agent Ready</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main View Content Area -->
+    <main class="main-content">
+      <!-- TAB 1: DASHBOARD -->
+      <section id="tab-dashboard" class="tab-content active">
+        <div class="header-card glass-panel">
+          <div class="status-header">
+            <div class="status-badge-container">
+              <span class="pulse-ring"></span>
+              <span class="status-dot"></span>
+              <span class="status-text" id="master-status-text">CONNECTED</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="master-proxy-toggle" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="status-details">
+            <div class="detail-row">
+              <span class="detail-label">Active Worker Node:</span>
+              <span class="detail-value highlight" id="active-worker-url">https://proxy-translator-worker.sngrcreative.workers.dev</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Detected Exit IP:</span>
+              <div class="ip-chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                </svg>
+                <span id="exit-ip-address">104.28.163.123 (Cloudflare Edge)</span>
+                <button class="icon-btn-sm" id="btn-refresh-ip" title="Refresh Exit IP">↻</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Proxy Gateways Row -->
+        <div class="proxies-grid">
+          <div class="proxy-card glass-panel">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon http-icon">HTTP</span>
+                <span class="card-title">HTTP Proxy</span>
+              </div>
+              <span class="status-pill active">Active</span>
+            </div>
+            <div class="card-body">
+              <div class="endpoint-value">127.0.0.1:8888</div>
+              <div class="metrics-row">
+                <span class="metric-label">Requests Processed:</span>
+                <span class="metric-num" id="http-count">1,247</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="btn-secondary btn-sm" onclick="navigator.clipboard.writeText('http://127.0.0.1:8888')">
+                📋 Copy URL
+              </button>
+              <button class="btn-secondary btn-sm" onclick="navigator.clipboard.writeText('http_proxy=http://127.0.0.1:8888')">
+                💻 Export Env
+              </button>
+            </div>
+          </div>
+
+          <div class="proxy-card glass-panel">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon socks-icon">SOCKS5</span>
+                <span class="card-title">SOCKS5 Proxy</span>
+              </div>
+              <span class="status-pill active">Remote DNS</span>
+            </div>
+            <div class="card-body">
+              <div class="endpoint-value">127.0.0.1:1080</div>
+              <div class="metrics-row">
+                <span class="metric-label">Requests Processed:</span>
+                <span class="metric-num" id="socks-count">856</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="btn-secondary btn-sm" onclick="navigator.clipboard.writeText('socks5://127.0.0.1:1080')">
+                📋 Copy URL
+              </button>
+              <button class="btn-secondary btn-sm" onclick="navigator.clipboard.writeText('proxychains4 -q')">
+                ⚡ Proxychains
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Bottom: Traffic Graph & Live Feed -->
+        <div class="dashboard-bottom-grid">
+          <div class="graph-card glass-panel">
+            <div class="card-title">Bandwidth Monitor</div>
+            <div class="chart-container">
+              <svg class="traffic-chart" viewBox="0 0 500 150">
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.5"/>
+                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0,130 Q70,90 140,110 T280,60 T420,90 T500,40 L500,150 L0,150 Z" fill="url(#chartGrad)" />
+                <path d="M0,130 Q70,90 140,110 T280,60 T420,90 T500,40" fill="none" stroke="#8b5cf6" stroke-width="3" />
+              </svg>
+            </div>
+            <div class="chart-legend">
+              <span>▲ 4.2 MB/s Upload</span>
+              <span>▼ 18.6 MB/s Download</span>
+            </div>
+          </div>
+
+          <div class="feed-card glass-panel">
+            <div class="card-title">Recent Proxy Events</div>
+            <div class="mini-log-feed" id="mini-log-feed">
+              <div class="log-entry"><span class="time">17:33:50</span> <span class="method get">GET</span> target.com <span class="status-200">200 OK</span></div>
+              <div class="log-entry"><span class="time">17:33:52</span> <span class="method connect">CONNECT</span> data.wpscan.org:443 <span class="status-200">200 OK</span></div>
+              <div class="log-entry"><span class="time">17:33:55</span> <span class="method get">GET</span> api.github.com <span class="status-200">200 OK</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ROUTING RULES -->
+      <section id="tab-rules" class="tab-content">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Allow-list Routing Rules</h1>
+            <p class="page-subtitle">Control target pattern matching enforced by the Cloudflare Worker KV.</p>
+          </div>
+          <button class="btn-primary" id="btn-open-add-rule">+ Add New Rule</button>
+        </div>
+
+        <div class="preset-bar glass-panel">
+          <span class="preset-label">Quick Presets:</span>
+          <button class="btn-preset active" id="preset-bounty">🎯 Bug Bounty Mode</button>
+          <button class="btn-preset" id="preset-strict">🔒 Strict Security (No Wildcards)</button>
+          <button class="btn-preset" id="preset-dev">⚡ Allow All (*)</button>
+        </div>
+
+        <div class="table-container glass-panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pattern</th>
+                <th>Protocol</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="rules-table-body">
+              <tr>
+                <td><code>*.target.com</code></td>
+                <td><span class="tag tag-http">HTTP</span></td>
+                <td><span class="status-pill active">Active</span></td>
+                <td><button class="btn-danger-sm">Delete</button></td>
+              </tr>
+              <tr>
+                <td><code>api.github.com</code></td>
+                <td><span class="tag tag-http">HTTP</span></td>
+                <td><span class="status-pill active">Active</span></td>
+                <td><button class="btn-danger-sm">Delete</button></td>
+              </tr>
+              <tr>
+                <td><code>192.168.1.*:22</code></td>
+                <td><span class="tag tag-tcp">TCP</span></td>
+                <td><span class="status-pill active">Active</span></td>
+                <td><button class="btn-danger-sm">Delete</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 3: WORKER NODES -->
+      <section id="tab-nodes" class="tab-content">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Cloudflare Worker Nodes</h1>
+            <p class="page-subtitle">Manage deployed proxy edge workers and switch active exit nodes.</p>
+          </div>
+          <button class="btn-primary">+ Add Worker Node</button>
+        </div>
+
+        <div class="nodes-grid">
+          <div class="node-card glass-panel active-node">
+            <div class="node-header">
+              <div class="node-title">US-East Node (Production)</div>
+              <span class="status-pill active">Active</span>
+            </div>
+            <div class="node-url">https://proxy-translator-worker.sngrcreative.workers.dev</div>
+            <div class="node-stats">
+              <span>Latency: <strong class="ping-good">12ms</strong></span>
+              <span>Status: <strong>Healthy</strong></span>
+            </div>
+            <button class="btn-secondary btn-full" disabled>Currently Connected</button>
+          </div>
+
+          <div class="node-card glass-panel">
+            <div class="node-header">
+              <div class="node-title">EU-West Node (Backup)</div>
+              <span class="status-pill">Standby</span>
+            </div>
+            <div class="node-url">https://proxy-translator-worker-eu.workers.dev</div>
+            <div class="node-stats">
+              <span>Latency: <strong class="ping-med">45ms</strong></span>
+              <span>Status: <strong>Ready</strong></span>
+            </div>
+            <button class="btn-primary btn-full">Switch to Node</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: LIVE LOGS -->
+      <section id="tab-logs" class="tab-content">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Live Diagnostics & Logs</h1>
+            <p class="page-subtitle">Real-time stream of HTTP/SOCKS5 connections from pt-agent.</p>
+          </div>
+          <button class="btn-secondary" id="btn-clear-logs">Clear Logs</button>
+        </div>
+
+        <div class="terminal-panel glass-panel">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">pt-agent daemon log stream</span>
+          </div>
+          <div class="terminal-body" id="log-console">
+            <div class="log-line info">🚀 Proxy Translator Agent v3.0</div>
+            <div class="log-line info">   Worker: https://proxy-translator-worker.sngrcreative.workers.dev</div>
+            <div class="log-line info">   HTTP proxy: 127.0.0.1:8888</div>
+            <div class="log-line info">   SOCKS5 proxy (Remote DNS): 127.0.0.1:1080</div>
+            <div class="log-line ok">[2026-08-12 11:47:59] [HTTP] CONNECT ifconfig.me:443 -> 200 OK</div>
+            <div class="log-line ok">[2026-08-12 11:48:02] [SOCKS5] TUNNEL target: ifconfig.me:443 -> Connected</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: SETTINGS -->
+      <section id="tab-settings" class="tab-content">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Settings & Credentials</h1>
+            <p class="page-subtitle">Configure local proxy ports, auth secret tokens, and autostart.</p>
+          </div>
+        </div>
+
+        <div class="settings-form glass-panel">
+          <div class="form-group">
+            <label class="form-label">HTTP Proxy Listener Port</label>
+            <input type="number" class="form-input" value="8888" id="input-http-port" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">SOCKS5 Proxy Listener Port</label>
+            <input type="number" class="form-input" value="1080" id="input-socks-port" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Worker Authentication Secret (PROXY_AUTH)</label>
+            <input type="password" class="form-input" value="y9HUkC7Eppc4f2NBVvhLCFb35mYz2WkIdYJ9NxP2" id="input-auth-token" />
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" checked />
+              <span>Auto-start pt-agent on system startup</span>
+            </label>
+          </div>
+
+          <button class="btn-primary" id="btn-save-settings">Save Settings</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="main.js" type="module"></script>
+</body>
+</html>
