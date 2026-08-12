@@ -1,0 +1,28 @@
+name = "proxy-translator-worker"
+main = "build/worker/shim.mjs"
+compatibility_date = "2024-09-23"
+
+[build]
+command = "cargo install worker-build 2>/dev/null; worker-build --release"
+
+[vars]
+ENVIRONMENT = "production"
+
+# Workers Smart Placement
+[placement]
+mode = "smart"
+
+# KV Namespace for routing rules
+[[kv_namespaces]]
+binding = "ROUTES"
+id = "YOUR_KV_NAMESPACE_ID"
+
+# Durable Objects for TCP state management
+[durable_objects]
+bindings = [
+  { name = "TCP_TUNNEL", class_name = "TcpTunnel" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TcpTunnel"]

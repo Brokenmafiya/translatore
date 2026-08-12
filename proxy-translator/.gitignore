@@ -1,0 +1,16 @@
+/target/
+**/target/
+build/
+*.wasm
+node_modules/
+.wrangler/
+
+# Secrets
+vlais.txt
+tokens.json
+auth_token
+*.secret
+
+# OS
+.DS_Store
+Thumbs.db
